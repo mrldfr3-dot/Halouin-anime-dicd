@@ -30,6 +30,7 @@ local autoLoadButton = nil
 local autoExecuteAfterTeleportEnabled = false
 local autoExecuteButton = nil
 local autoExecuteSettingFile = "HalloweenAutoExecute.json"
+local queueScriptAfterTeleport
 local rejoinConnection = nil
 local page = "Farm"
 local scriptStartedAt = os.clock()
@@ -473,11 +474,11 @@ autoLoadButton = makeButton(pages.Utility, "Auto Load: ON", 112, function()
 end)
 
 -- Autoexecute depende do suporte do executor a queue_on_teleport; não cobre desconexões comuns.
-local function queueScriptAfterTeleport()
+queueScriptAfterTeleport = function()
     if not autoExecuteAfterTeleportEnabled then return end
     local queueFn = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
     if type(queueFn) ~= "function" then return end
-    local sourceUrl = "https://raw.githubusercontent.com/mrldfr3-dot/HalloweenRouteFarm/refs/heads/main/Anime_Dice_Hub_Statistics.lua"
+    local sourceUrl = "https://raw.githubusercontent.com/mrldfr3-dot/Halouin-anime-dicd/refs/heads/main/Anime_Dice_Hub_Statistics_AutoExecute.lua"
     local queuedCode = 'loadstring(game:HttpGet("' .. sourceUrl .. '"))()'
     pcall(function() queueFn(queuedCode) end)
 end
