@@ -60,6 +60,8 @@ local profileName = "Default"
 local speed = 50
 local currentIndex = 0
 local movementMode = nil
+local portalEntryPosition = Vector3.new(286.61, 4.14, -100.53)
+local portalEntryAttempted = false
 local farmButton = nil
 local teleportModeButton = nil
 local moveToModeButton = nil
@@ -430,6 +432,35 @@ local function stopFarm()
     updateStatus()
 end
 
+local function enterHalloweenPortal(char, humanoid, root)
+    -- Executa uma única tentativa por instância do hub, antes do percurso das portas.
+    if portalEntryAttempted then return char, humanoid, root end
+    portalEntryAttempted = true
+    status.Text = "Status: indo ao portal do Halloween..."
+    if not char.Parent or not humanoid.Parent or not root.Parent then
+        char, humanoid, root = characterParts()
+    end
+    if movementMode == "Teleporte" then
+        root.CFrame = CFrame.new(portalEntryPosition)
+        task.wait(1.5)
+    else
+        humanoid.WalkSpeed = speed
+        humanoid:MoveTo(portalEntryPosition)
+        local started = os.clock()
+        while running and os.clock() - started < 12 do
+            if not root.Parent then break end
+            if (root.Position - portalEntryPosition).Magnitude <= 5 then break end
+            task.wait(0.1)
+        end
+        task.wait(1.5)
+    end
+    -- Reobtém as partes caso a entrada no portal tenha trocado o personagem.
+    if not char.Parent or not humanoid.Parent or not root.Parent then
+        char, humanoid, root = characterParts()
+    end
+    return char, humanoid, root
+end
+
 local function runRoute()
     if not movementMode then
         status.Text = "Status: Off\nModo: nenhum modo selecionado\nEscolha Teleporte ou MoveTo primeiro."
@@ -449,6 +480,7 @@ local function runRoute()
         local ok, err = pcall(function()
             local char, humanoid, root = characterParts()
             humanoid.WalkSpeed = speed
+            char, humanoid, root = enterHalloweenPortal(char, humanoid, root)
             while running do
                 if movementMode == "Teleporte" then
                     for i, target in ipairs(TELEPORT_POINTS) do
@@ -595,7 +627,7 @@ queueScriptAfterTeleport = function()
     if not autoExecuteAfterTeleportEnabled or teleportScriptQueued then return end
     local queueFn = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
     if type(queueFn) ~= "function" then return end
-    local sourceUrl = "https://raw.githubusercontent.com/mrldfr3-dot/Halouin-anime-dicd/refs/heads/main/Anime_Dice_Hub_Statistics_AutoExecute_SINGLE_INSTANCE.lua"
+    local sourceUrl = "https://raw.githubusercontent.com/mrldfr3-dot/Halouin-anime-dicd/refs/heads/main/Anime%20Dice%20Hub%20Halloween.lua"
     local queuedCode = 'local blocked=pcall(function() return readfile("HalloweenHubClosed.flag") end); if not blocked then loadstring(game:HttpGet("' .. sourceUrl .. '"))() end'
     local ok = pcall(function() queueFn(queuedCode) end)
     if ok then teleportScriptQueued = true end
